@@ -1,0 +1,49 @@
+name: sitemate-api
+
+services:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    env_file: ./server/.env
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - api-network
+    ports:
+      - 8000:8000
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - api-network
+    ports:
+      - 3000:3000
+    depends_on:
+      - api
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - 80:80
+    depends_on:
+      - api
+      - frontend
+
+networks:
+  api-network:
+    driver: bridge
